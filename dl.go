@@ -71,13 +71,6 @@ const (
 	_RTLD_FIRST    = 0x100
 )
 
-var (
-	_RTLD_NEXT      = &Dylib{"", ^Handle(0)}
-	_RTLD_DEFAULT   = &Dylib{"", ^Handle(1)}
-	_RTLD_SELF      = &Dylib{"", ^Handle(2)}
-	_RTLD_MAIN_ONLY = &Dylib{"", ^Handle(4)}
-)
-
 type Handle uintptr
 
 type Dylib struct {
@@ -85,10 +78,13 @@ type Dylib struct {
 	Handle Handle
 }
 
-type Symbol struct {
-	Dylib *Dylib
-	Name  string
-	Addr  uintptr
+// MustOpen is like Open but panics if operation failes.
+func MustOpen(path string, mode int) *Dylib {
+	l, e := Open(path, mode)
+	if e != nil {
+		panic(e)
+	}
+	return l
 }
 
 // Open loads and links a dynamic library or bundle into the current process.

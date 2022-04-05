@@ -1,19 +1,10 @@
 package dl
 
 import (
-	"reflect"
 	"strings"
 	"syscall"
 	"unsafe"
 )
-
-//go:linkname syscall_syscall syscall.syscall
-
-func syscall_syscall(fn, a1, a2, a3 uintptr) (r1, r2, err uintptr) // runtime/sys_darwin.go
-
-func funcPC(f interface{}) uintptr {
-	return reflect.ValueOf(f).Pointer()
-}
 
 func cstring(s string) (*byte, error) {
 	if strings.IndexByte(s, 0) != -1 {

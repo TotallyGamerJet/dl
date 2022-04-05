@@ -1,36 +1,18 @@
 package dl
 
-import "unsafe"
+//go:generate onlygo libc.go
 
-var libc_dlopen uintptr
+//onlygo:open darwin arm64 /usr/lib/libSystem.B.dylib
+//onlygo:resolve_with_cgo
 
-func dlopen(path *byte, mode int) (ret uintptr) {
-	ret, _, _ = syscall_syscall(funcPC(libc_dlopen_trampoline), uintptr(unsafe.Pointer(path)), uintptr(mode), 0)
-	return
-}
-func libc_dlopen_trampoline()
+//onlygo:open ios arm64 /usr/lib/libSystem.B.dylib
+//onlygo:open darwin amd64 /usr/lib/libSystem.B.dylib
+//onlygo:open linux amd64 /usr/lib/libc.so
 
-var libc_dlerror uintptr
+func dlopen(path *byte, mode int) (ret uintptr)
 
-func dlerror() (ret uintptr) {
-	ret, _, _ = syscall_syscall(funcPC(libc_dlerror_trampoline), 0, 0, 0)
-	return
-}
-func libc_dlerror_trampoline()
+func dlerror() (ret uintptr)
 
-var libc_dlclose uintptr
+func dlclose(handle uintptr) (ret int)
 
-func dlclose(handle uintptr) (ret int) {
-	r0, _, _ := syscall_syscall(funcPC(libc_dlclose_trampoline), uintptr(handle), 0, 0)
-	ret = int(r0)
-	return
-}
-func libc_dlclose_trampoline()
-
-var libc_dlsym uintptr
-
-func dlsym(handle uintptr, symbol *byte) (ret uintptr) {
-	ret, _, _ = syscall_syscall(funcPC(libc_dlsym_trampoline), uintptr(handle), uintptr(unsafe.Pointer(symbol)), 0)
-	return
-}
-func libc_dlsym_trampoline()
+func dlsym(handle uintptr, symbol *byte) (ret uintptr)

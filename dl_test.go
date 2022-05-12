@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"runtime"
 	"testing"
-	"unsafe"
 )
 
 func getLibc() string {
@@ -18,10 +17,6 @@ func getLibc() string {
 	}
 }
 
-var _malloc uintptr // pointer to malloc function
-
-func libc_malloc(uintptr) unsafe.Pointer
-
 func TestDL(t *testing.T) {
 	var err error
 	libc, err := Open(getLibc(), ScopeGlobal)
@@ -29,6 +24,7 @@ func TestDL(t *testing.T) {
 		t.Fatal(err)
 		return
 	}
+	var _malloc uintptr
 	_malloc, err = libc.Lookup("malloc")
 	if err != nil {
 		t.Fatal(err)
@@ -38,7 +34,7 @@ func TestDL(t *testing.T) {
 		t.Failed()
 	}
 	const MallocSize = 5
-	if libc_malloc(MallocSize) == nil {
+	if ret, _, _ := syscall_syscallX(_malloc, MallocSize, 0, 0); ret == 0 {
 		t.Failed()
 	}
 	_, err = libc.Lookup("UnknownFunctionName")

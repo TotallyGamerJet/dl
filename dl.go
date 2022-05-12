@@ -3,6 +3,7 @@ package dl
 import (
 	"errors"
 	"runtime"
+	"unsafe"
 )
 
 var (
@@ -133,8 +134,7 @@ func Open(path string, mode int) (*Dylib, error) {
 
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
-
-	handle := dlopen(p, mode)
+	handle, _, _ := syscall_syscallX(dlopenABI0, uintptr(unsafe.Pointer(p)), uintptr(mode), 0)
 	if handle <= 0 {
 		return nil, lastError()
 	}
@@ -159,7 +159,8 @@ func (d *Dylib) Lookup(name string) (uintptr, error) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
-	ret := dlsym(uintptr(d.Handle), p)
+	ret, _, _ := syscall_syscallX(dlsymABI0, uintptr(d.Handle), uintptr(unsafe.Pointer(p)), 0)
+	runtime.KeepAlive(p)
 	// We must check dlerrgl.go
 	//gl.sor because symbol could be NULL.
 	if err = lastError(); err != nil {
@@ -188,7 +189,7 @@ func (d *Dylib) Close() (err error) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
-	ret := dlclose(uintptr(d.Handle))
+	ret, _, _ := syscall_syscallX(dlcloseABI0, uintptr(d.Handle), 0, 0)
 	if ret != 0 {
 		err = lastError()
 	}
@@ -206,7 +207,7 @@ func (d *Dylib) Close() (err error) {
 // See dlerror(3).
 //
 func lastError() error {
-	ret := dlerror()
+	ret, _, _ := syscall_syscallX(dlerrorABI0, 0, 0, 0)
 	if ret != 0 {
 		s := gostring(ret)
 		// TODO export error vars by known string suffixes.
